@@ -2,3 +2,7 @@ fastapi
 uvicorn
 faker
 sse-starlette
+requests 
+sseclient-py 
+mysql-connector-python 
+pymongo

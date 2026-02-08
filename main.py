@@ -18,14 +18,18 @@ DATA_STREAM_URL = "http://127.0.0.1:8000/record/5000"
 
 def load_metadata():
     if os.path.exists(METADATA_FILE):
-        with open(METADATA_FILE, 'r') as f:
-            return json.load(f)
+        try:
+            with open(METADATA_FILE, 'r') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            # If file is empty or corrupted, return empty dict
+            return {}
     return {}
 
 def save_metadata(stats):
     os.makedirs(os.path.dirname(METADATA_FILE), exist_ok=True)
     with open(METADATA_FILE, 'w') as f:
-        json.dump(stats, f, indent=4)
+        json.dump(stats, f, indent=4) # No custom encoder needed anymore!
 
 def fetch_stream_data(url):
     """
@@ -52,8 +56,8 @@ def main():
     classifier = Classifier(freq_threshold=0.8)
     
     # Connect to Databases
-    sql_handler = SQLHandler(db_name="adaptive_db", password="password") 
-    mongo_handler = MongoHandler(db_name="adaptive_db")
+    sql_handler = SQLHandler() 
+    mongo_handler = MongoHandler()
     
     print("Connecting to storage backends...")
     sql_handler.connect()
@@ -61,7 +65,7 @@ def main():
     # Load Persistence
     saved_stats = load_metadata()
     if saved_stats:
-        analyzer.field_stats = saved_stats
+        analyzer.load_stats(saved_stats)
         print("Loaded existing metadata stats.")
 
     # Processing Loop
@@ -131,7 +135,7 @@ def main():
                     mongo_handler.insert_batch(mongo_inserts)
 
                 # D. Save State
-                save_metadata(analyzer.field_stats)
+                save_metadata(analyzer.export_stats())
                 buffer = []
 
     except KeyboardInterrupt:

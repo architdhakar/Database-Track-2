@@ -14,7 +14,9 @@ MongoDB Community Server
 2. Clone the Repository
 
 Bash
+
 git clone https://github.com/architdhakar/Database-Track-2
+
 cd Database-Track-2
 
 3. Install Dependencies

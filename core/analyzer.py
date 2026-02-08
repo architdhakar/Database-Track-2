@@ -1,12 +1,13 @@
 """
 Analysis of json data
 """
+import copy
+
 class Analyzer:
     def __init__(self):
         """
         Initializes the Analyzer to track field statistics across multiple batches.
         """
-        # Dictionary to hold raw stats for every field seen so far
         self.field_stats = {}
         self.total_records_processed = 0
 
@@ -25,7 +26,7 @@ class Analyzer:
                 if key not in self.field_stats:
                     self.field_stats[key] = {
                         "count": 0,
-                        "types": set(),
+                        "types": set(),  
                         "is_nested": False
                     }
 
@@ -33,40 +34,33 @@ class Analyzer:
                 self.field_stats[key]["count"] += 1
 
                 # 3. Analyze Type
-                # We store the string name of the type (e.g., 'int', 'str', 'float')
-                # If a field has { 'int', 'str' }, it is "Unstable".
                 current_type = type(value).__name__
                 self.field_stats[key]["types"].add(current_type)
 
                 # 4. Check for Nesting
-                # If it's a dictionary or list, mark as nested.
                 if isinstance(value, (dict, list)):
                     self.field_stats[key]["is_nested"] = True
 
     def get_schema_stats(self):
         """
-        Returns a summary of the analysis for the Classifier to use.
-        Calculates percentage frequency and determines stability.
+        Returns a summary for the Classifier. 
+        Calculates percentages and stability.
         """
         summary = {}
 
         for key, stats in self.field_stats.items():
-            # Frequency Calculation (0.0 to 1.0)
             freq_ratio = 0.0
             if self.total_records_processed > 0:
                 freq_ratio = stats["count"] / self.total_records_processed
 
-            # Stability Check
-            # If we've seen more than 1 type, it's unstable (mixed).
+            # Convert set to list for stability check
             unique_types = list(stats["types"])
             is_stable = (len(unique_types) == 1)
             
-            # Identify the dominant type (or 'mixed')
-            # For SQL, we need a specific type. If mixed, we might default to VARCHAR later.
             detected_type = unique_types[0] if is_stable else "mixed"
 
             summary[key] = {
-                "frequency_ratio": freq_ratio,  # e.g., 0.95 (95%)
+                "frequency_ratio": freq_ratio,
                 "type_stability": "stable" if is_stable else "unstable",
                 "detected_type": detected_type,
                 "is_nested": stats["is_nested"]
@@ -74,18 +68,22 @@ class Analyzer:
 
         return summary
 
-if __name__ == "__main__":
-    # Simulate a stream where 'age' is stable, but 'score' drifts types
-    test_batch = [
-        {"user": "alice", "age": 25, "score": 100},
-        {"user": "bob",   "age": 30, "score": "A+"},  # Score changes int -> str
-        {"user": "charlie", "metadata": {"origin": "US"}} # Nested field
-    ]
+    def export_stats(self):
+        """
+        Prepares stats for JSON saving by converting Sets -> Lists.
+        """
+        # Deep copy so we don't mess up the running analyzer
+        export_data = copy.deepcopy(self.field_stats)
+        for key, stats in export_data.items():
+            # JSON can't save sets, so we make them lists
+            stats["types"] = list(stats["types"]) 
+        return export_data
 
-    analyzer = Analyzer()
-    analyzer.analyze_batch(test_batch)
-    
-    stats = analyzer.get_schema_stats()
-    
-    import json
-    print(json.dumps(stats, indent=2))
+    def load_stats(self, loaded_stats):
+        """
+        Loads stats from JSON and converts Lists -> Sets so .add() works.
+        """
+        self.field_stats = loaded_stats
+        for key, stats in self.field_stats.items():
+            # Convert back to set so analyze_batch works
+            stats["types"] = set(stats["types"])

@@ -12,7 +12,7 @@ class SQLHandler:
             'password': os.getenv("SQL_PASSWORD"),
             'database': os.getenv("SQL_DB_NAME"),
             # SSL is usually required for cloud databases
-            'ssl_disabled': False 
+            #'ssl_disabled': False 
         }
         self.table_name = "structured_data"
         self.conn = None

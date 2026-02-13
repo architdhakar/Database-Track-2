@@ -9,7 +9,7 @@ class Classifier:
         :param freq_threshold: Fields appearing in >80% (default) of records are candidates for SQL.
         """
         self.freq_threshold = freq_threshold
-        self.common_fields = {'user_name', 't_stamp', 'sys_ingested_at'}
+        self.common_fields = {'username', 'timestamp', 'sys_ingested_at'}
 
     def decide_schema(self, stats):
         """
@@ -52,9 +52,15 @@ class Classifier:
 
             # CRITERIA D: High Frequency + Stable + Flat -> SQL
             # This is the ideal candidate for a structured table.
+            
+            # Check for Uniqueness (Assignment Requirement)
+            # If unique_ratio is high (~1.0), it's a candidate for a PRIMARY/UNIQUE key.
+            is_unique = metrics.get("unique_ratio", 0) >= 1.0
+            
             schema_decisions[field] = {
                 "target": "SQL",
-                "sql_type": self._map_python_type_to_sql(metrics["detected_type"])
+                "sql_type": self._map_python_type_to_sql(metrics["detected_type"]),
+                "is_unique": is_unique
             }
 
         return schema_decisions

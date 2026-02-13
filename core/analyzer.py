@@ -27,7 +27,8 @@ class Analyzer:
                     self.field_stats[key] = {
                         "count": 0,
                         "types": set(),  
-                        "is_nested": False
+                        "is_nested": False,
+                        "unique_values": set() # For cardinality tracking
                     }
 
                 # 2. Update Frequency Count
@@ -40,6 +41,10 @@ class Analyzer:
                 # 4. Check for Nesting
                 if isinstance(value, (dict, list)):
                     self.field_stats[key]["is_nested"] = True
+                else:
+                     # 5. Track Uniqueness (HyperLogLog-ish approximation via set capping)
+                    if len(self.field_stats[key]["unique_values"]) < 1000:
+                        self.field_stats[key]["unique_values"].add(value)
 
     def get_schema_stats(self):
         """
@@ -59,11 +64,23 @@ class Analyzer:
             
             detected_type = unique_types[0] if is_stable else "mixed"
 
+            # Calculate Uniqueness
+            # If we hit the cap (1000), we assume it's high cardinality
+            unique_count = len(stats["unique_values"])
+            unique_ratio = 0.0
+            if stats["count"] > 0:
+                unique_ratio = unique_count / stats["count"]
+            
+            # If we capped it, treat it as very unique (1.0) for heuristic purposes if count is large
+            if unique_count >= 1000:
+                 unique_ratio = 1.0
+
             summary[key] = {
                 "frequency_ratio": freq_ratio,
                 "type_stability": "stable" if is_stable else "unstable",
                 "detected_type": detected_type,
-                "is_nested": stats["is_nested"]
+                "is_nested": stats["is_nested"],
+                "unique_ratio": unique_ratio
             }
 
         return summary
@@ -77,6 +94,7 @@ class Analyzer:
         for key, stats in export_data.items():
             # JSON can't save sets, so we make them lists
             stats["types"] = list(stats["types"]) 
+            stats["unique_values"] = list(stats["unique_values"]) 
         return export_data
 
     def load_stats(self, loaded_stats):
@@ -87,3 +105,4 @@ class Analyzer:
         for key, stats in self.field_stats.items():
             # Convert back to set so analyze_batch works
             stats["types"] = set(stats["types"])
+            stats["unique_values"] = set(stats.get("unique_values", []))

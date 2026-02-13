@@ -2,19 +2,27 @@ import json
 import os
 import requests
 import sseclient
+import threading
+import queue
+import time
 from datetime import datetime
 
 from core.normalizer import Normalizer
 from core.analyzer import Analyzer
 from core.classifier import Classifier
+from core.query_engine import QueryEngine
+from core.router import Router
 from db.sql_handler import SQLHandler
 from db.mongo_handler import MongoHandler
 
-
+# Configuration
 BATCH_SIZE = 50
 METADATA_FILE = "metadata/schema_map.json"
-# FastAPI endpoint: /record/{count}
-DATA_STREAM_URL = "http://127.0.0.1:8000/record/5000" 
+DATA_STREAM_URL = "http://127.0.0.1:8000/record/5000"
+MAX_QUEUE_SIZE = 1000  # Prevent memory overflow
+
+# Global Flags
+STOP_EVENT = threading.Event()
 
 def load_metadata():
     if os.path.exists(METADATA_FILE):
@@ -22,45 +30,148 @@ def load_metadata():
             with open(METADATA_FILE, 'r') as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            # If file is empty or corrupted, return empty dict
             return {}
     return {}
 
 def save_metadata(stats):
     os.makedirs(os.path.dirname(METADATA_FILE), exist_ok=True)
     with open(METADATA_FILE, 'w') as f:
-        json.dump(stats, f, indent=4) # No custom encoder needed anymore!
+        json.dump(stats, f, indent=4)
 
-def fetch_stream_data(url):
+# --- THREAD 1: INGESTOR ---
+def ingest_worker(raw_queue, data_url):
     """
-    Connects to the FastAPI SSE stream and yields records one by one.
+    Producer: Fetches data -> Normalizes -> Puts to Raw Queue.
     """
-    print(f"Connecting to data stream at {url}...")
+    print(f"[Ingestor] Connecting to data stream at {data_url}...")
+    normalizer = Normalizer()
+    
     try:
-        response = requests.get(url, stream=True)
+        response = requests.get(data_url, stream=True)
         client = sseclient.SSEClient(response)
         
         for event in client.events():
+            if STOP_EVENT.is_set():
+                break
+            
             if event.data:
-                yield json.loads(event.data)
-                
-    except requests.exceptions.ConnectionError:
-        print(f"Error: Could not connect to {url}. Is the simulation server running?")
-        return
+                try:
+                    raw_record = json.loads(event.data)
+                    clean_record = normalizer.normalize_record(raw_record)
+                    
+                    try:
+                        raw_queue.put(clean_record, timeout=1) 
+                    except queue.Full:
+                        # Backpressure logic
+                        while raw_queue.full() and not STOP_EVENT.is_set():
+                            time.sleep(0.1)
+                        if not STOP_EVENT.is_set():
+                            raw_queue.put(clean_record)
+
+                except json.JSONDecodeError:
+                    continue
+                    
+    except Exception as e:
+        print(f"[Ingestor] Error: {e}")
+    finally:
+        print("[Ingestor] Thread stopping.")
+
+# --- THREAD 2: ANALYZER / CLASSIFIER ---
+def process_worker(raw_queue, write_queue, analyzer, classifier):
+    """
+    Processor: Raw Queue -> Analyze -> Classify -> Write Queue.
+    """
+    print("[Processor] Worker started.")
+    buffer = []
+    
+    while not STOP_EVENT.is_set() or not raw_queue.empty():
+        try:
+            record = raw_queue.get(timeout=1)
+            buffer.append(record)
+            raw_queue.task_done()
+        except queue.Empty:
+            pass 
+
+        if len(buffer) >= BATCH_SIZE or (STOP_EVENT.is_set() and buffer):
+            if not buffer:
+                continue
+            
+            try:
+                # 1. Analyze
+                analyzer.analyze_batch(buffer)
+                stats = analyzer.get_schema_stats()
+
+                # 2. Classify
+                schema_decisions = classifier.decide_schema(stats)
+
+                # 3. Pass to Router (via Write Queue)
+                # We pass the Batch AND the Decisions
+                payload = {
+                    "batch": buffer,
+                    "decisions": schema_decisions,
+                    "stats": analyzer.export_stats() # For saving metadata later
+                }
+                write_queue.put(payload)
+
+            except Exception as e:
+                print(f"[Processor] Error: {e}")
+            
+            buffer = [] # Clear local buffer
+    
+    print("[Processor] Thread stopping.")
+
+# --- THREAD 3: ROUTER ---
+def router_worker(write_queue, router):
+    """
+    Router: Write Queue -> Migrate/Schema Update -> Insert to DBs.
+    """
+    print("[Router] Worker started.")
+    
+    while not STOP_EVENT.is_set() or not write_queue.empty():
+        try:
+            payload = write_queue.get(timeout=1)
+            batch = payload['batch']
+            decisions = payload['decisions']
+            
+            # 1. Update SQL Schema if needed
+            router.sql_handler.update_schema(decisions)
+            
+            # 2. Route & Migrate & Insert
+            router.process_batch(batch, decisions)
+            
+            # 3. Save Metadata (Persist the decisions/stats)
+            save_metadata(payload['stats'])
+            
+            write_queue.task_done()
+            
+        except queue.Empty:
+            pass
+        except Exception as e:
+            print(f"[Router] Error: {e}")
+
+    print("[Router] Thread stopping.")
 
 def main():
-    print("Starting Adaptive Ingestion Engine...")
+    print("Starting Adaptive Ingestion Engine (3-Stage Pipeline)...")
 
-    normalizer = Normalizer()
-    analyzer = Analyzer()
-    classifier = Classifier(freq_threshold=0.8)
+    # Queues
+    raw_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
+    write_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
     
-    # Connect to Databases
+    # Core Components
+    analyzer = Analyzer()
+    classifier = Classifier(freq_threshold=0.8) # 80% frequency rule
+    
+    # DB & Router
     sql_handler = SQLHandler() 
     mongo_handler = MongoHandler()
+    router = Router(sql_handler, mongo_handler)
     
     print("Connecting to storage backends...")
-    sql_handler.connect()
+    try:
+        sql_handler.connect()
+    except Exception as e:
+        print(f"Warning: SQL Connection failed: {e}")
 
     # Load Persistence
     saved_stats = load_metadata()
@@ -68,84 +179,44 @@ def main():
         analyzer.load_stats(saved_stats)
         print("Loaded existing metadata stats.")
 
-    # Processing Loop
-    buffer = []
+    # Initialize Threads
+    t_ingest = threading.Thread(target=ingest_worker, args=(raw_queue, DATA_STREAM_URL))
+    t_process = threading.Thread(target=process_worker, args=(raw_queue, write_queue, analyzer, classifier))
+    t_router = threading.Thread(target=router_worker, args=(write_queue, router))
+
+    t_ingest.start()
+    t_process.start()
+    t_router.start()
+
+    # Query Engine (Main Thread CLI)
+    # Note: Query engine now inspects Ingestion Queue. We could add inspection for Write Queue if needed.
+    query_engine = QueryEngine(analyzer, raw_queue)
+
+    print("\nSystem Running. Type 'help' for commands, or 'exit' to quit.\n")
     
     try:
-        # We iterate over the live stream from FastAPI
-        for raw_record in fetch_stream_data(DATA_STREAM_URL):
-            buffer.append(raw_record)
-
-            # Process only when buffer is full
-            if len(buffer) >= BATCH_SIZE:
-                print(f"Processing batch of {len(buffer)} records...")
-
-                # Step 1: Cleaning of data
-                clean_batch = normalizer.normalize_batch(buffer)
-
-                # Step 2: Analysis
-                analyzer.analyze_batch(clean_batch)
-                stats = analyzer.get_schema_stats()
-
-                # Step 3: Classification
-                schema_decisions = classifier.decide_schema(stats)
-                
-                # Step 4: Routing & Persistence 
-                
-                # A. Evolve SQL Schema
-                sql_handler.update_schema(schema_decisions)
-
-                # B. Split Records
-                sql_inserts = []
-                mongo_inserts = []
-
-                for record in clean_batch:
-                    sql_rec = {}
-                    mongo_rec = {}
-
-                    # Mandatory Keys -> BOTH
-                    for key in ['user_name', 't_stamp', 'sys_ingested_at']:
-                        if key in record:
-                            sql_rec[key] = record[key]
-                            mongo_rec[key] = record[key]
-
-                    # Dynamic Routing
-                    for key, value in record.items():
-                        if key in ['user_name', 't_stamp', 'sys_ingested_at']:
-                            continue
-                        
-                        decision = schema_decisions.get(key, {"target": "MONGO"})
-                        target = decision['target']
-
-                        if target == 'SQL':
-                            sql_rec[key] = value
-                        elif target == 'MONGO':
-                            mongo_rec[key] = value
-                        elif target == 'BOTH':
-                            sql_rec[key] = value
-                            mongo_rec[key] = value
-
-                    sql_inserts.append(sql_rec)
-                    mongo_inserts.append(mongo_rec)
-
-                # C. Write
-                if sql_inserts:
-                    sql_handler.insert_batch(sql_inserts)
-                if mongo_inserts:
-                    mongo_handler.insert_batch(mongo_inserts)
-
-                # D. Save State
-                save_metadata(analyzer.export_stats())
-                buffer = []
-
+        while True:
+            user_input = input(">> ")
+            if user_input.strip().lower() == "exit":
+                print("Initiating shutdown...")
+                STOP_EVENT.set()
+                break
+            
+            response = query_engine.process_command(user_input)
+            print(response)
+            
     except KeyboardInterrupt:
-        print("\nStopping engine...")
-    except Exception as e:
-        print(f"Critical Error: {e}")
+        print("\nShutdown signal received.")
+        STOP_EVENT.set()
     finally:
+        print("Waiting for worker threads to finish...")
+        t_ingest.join()
+        t_process.join()
+        t_router.join()
+        
         sql_handler.close()
         mongo_handler.close()
-        print("Database connections closed.")
+        print("Database connections closed. System Shutdown Complete.")
 
 if __name__ == "__main__":
     main()

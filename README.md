@@ -1,4 +1,4 @@
-# Adaptive Ingestion System 🚀
+# Adaptive Ingestion System 
 
 > **Course Project:** CS 432 Databases (Assignment 1)  
 > **Topic:** Adaptive Ingestion & Hybrid Backend Placement
@@ -22,12 +22,12 @@ The system follows a threaded pipeline architecture:
 
 See [architecture.txt](architecture.txt) for a diagram and [system_concepts.md](system_concepts.md) for detailed logic of each component.
 
-## 🛠 Prerequisites
+##  Prerequisites
 *   **Python 3.8+**
 *   **MySQL Server** (Running locally or remotely)
 *   **MongoDB** (Running locally or remotely)
 
-## 📦 Installation
+##  Installation
 1.  **Clone the repository**:
     ```bash
     git clone <repo-url>

@@ -160,7 +160,7 @@ def main():
     
     # Core Components
     analyzer = Analyzer()
-    classifier = Classifier(freq_threshold=0.8) # 80% frequency rule
+    classifier = Classifier(lower_threshold=0.75, upper_threshold=0.85) # Hysteresis: 75-85% rule
     
     # DB & Router
     sql_handler = SQLHandler() 

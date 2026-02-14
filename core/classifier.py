@@ -94,7 +94,7 @@ class Classifier:
             'int': 'INT',
             'float': 'FLOAT',
             'bool': 'BOOLEAN',
-            'str': 'VARCHAR(255)',  
+            'str': 'TEXT',  
             'NoneType': 'VARCHAR(255)'
         }
         # If unknown, default to TEXT to be safe

@@ -31,7 +31,7 @@ class Normalizer:
 
         # 1. Generate Server Timestamp (sys_ingested_at)
         if 'sys_ingested_at' not in record:
-            normalized_record['sys_ingested_at'] = datetime.now().isoformat()
+            normalized_record['sys_ingested_at'] = datetime.now()
         else:
             normalized_record['sys_ingested_at'] = record['sys_ingested_at']
 

@@ -102,15 +102,20 @@ class Router:
 
             print(f"[Router] Migrating {len(rows)} records for '{field}' from SQL to Mongo...")
 
-            # 2. Update MongoDB
-            # note: This is slow for millions of records, but fine for assignment scale.
+            # 2. Update MongoDB using Bulk Write (Fast)
+            from pymongo import UpdateOne
+            bulk_ops = []
             for row in rows:
                 username, sys_time, value = row
                 # We use sys_ingested_at and username as composite key to find the mongo doc
-                filter_query = {"username": username, "sys_ingested_at": sys_time.isoformat() if hasattr(sys_time, 'isoformat') else sys_time}
-                update_query = {"$set": {field: value}}
-                
-                self.mongo_handler.collection.update_one(filter_query, update_query, upsert=True)
+                filter_query = {
+                    "username": username, 
+                    "sys_ingested_at": sys_time.isoformat() if hasattr(sys_time, 'isoformat') else sys_time
+                }
+                bulk_ops.append(UpdateOne(filter_query, {"$set": {field: value}}, upsert=True))
+
+            if bulk_ops:
+                self.mongo_handler.collection.bulk_write(bulk_ops)
 
             # 3. Drop Column from SQL
             print(f"[Router] Dropping column '{field}' from SQL...")

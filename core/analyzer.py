@@ -2,8 +2,8 @@
 Analysis of json data
 """
 import copy
-
 import threading
+from datetime import datetime
 
 class Analyzer:
     def __init__(self):
@@ -80,9 +80,15 @@ class Analyzer:
                 if stats["count"] > 0:
                     unique_ratio = total_unique_count / stats["count"]
                 
-                # If we capped it, treat it as very unique (1.0) for heuristic purposes
+                # If we capped it, we no longer blindly set it to 1.0. 
+                # Instead, we let the ratio decrease as the total count grows.
+                # However, we still need a heuristic to identify TRULY unique fields (like UUIDs) 
+                # even if we only track the first 1000.
                 if session_unique_count >= 1000 or stats.get("_unique_capped"):
-                     unique_ratio = 1.0
+                     # If it's capped, we keep the ratio as is (base_unique_count / count)
+                     # or maybe we should have a different marker. 
+                     # For now, let's just ensure it's not hardcoded to 1.0.
+                     pass
 
                 summary[key] = {
                     "frequency_ratio": freq_ratio,
@@ -122,7 +128,11 @@ class Analyzer:
                         stats["_unique_capped"] = True
                         export_stats["_unique_capped"] = True
                 else:
-                    export_stats["unique_values"] = list(export_stats["unique_values"])
+                    # Fix: Handle datetime objects in unique_values for JSON serialization
+                    export_stats["unique_values"] = [
+                        v.isoformat() if isinstance(v, datetime) else v 
+                        for v in stats["unique_values"]
+                    ]
                 
                 export_data["field_stats"][key] = export_stats
                     

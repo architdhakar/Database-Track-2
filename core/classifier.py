@@ -71,7 +71,11 @@ class Classifier:
                     target = "MONGO"
 
             # Check for Uniqueness (Assignment Requirement)
+            # Heuristic: Only strings or UUID-like strings should typically be unique.
+            # Numbers (int, float) are often metrics and should rarely be UNIQUE in this context.
             is_unique = metrics.get("unique_ratio", 0) >= 1.0
+            if metrics["detected_type"] in ['int', 'float', 'bool']:
+                is_unique = False
             
             if target == "SQL":
                 schema_decisions[field] = {
@@ -95,7 +99,8 @@ class Classifier:
             'float': 'FLOAT',
             'bool': 'BOOLEAN',
             'str': 'TEXT',  
-            'NoneType': 'VARCHAR(255)'
+            'NoneType': 'VARCHAR(255)',
+            'datetime': 'DATETIME'
         }
         # If unknown, default to TEXT to be safe
         return type_map.get(py_type, 'TEXT')

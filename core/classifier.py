@@ -3,14 +3,16 @@ Classifier for user events.
 Decision Logic
 """
 class Classifier:
-    def __init__(self, lower_threshold=0.75, upper_threshold=0.85):
+    def __init__(self, lower_threshold=0.75, upper_threshold=0.85, confidence_threshold=1000):
         """
         Initializes the Classifier with decision thresholds.
         :param lower_threshold: Fields dropping below this frequency revert to Mongo.
         :param upper_threshold: Fields exceeding this frequency promote to SQL.
+        :param confidence_threshold: Min records required before committing to UNIQUE constraint.
         """
         self.lower_threshold = lower_threshold
         self.upper_threshold = upper_threshold
+        self.confidence_threshold = confidence_threshold
         self.common_fields = {'username', 'timestamp', 'sys_ingested_at'}
         self.previous_decisions = {}
 
@@ -73,7 +75,13 @@ class Classifier:
             # Check for Uniqueness (Assignment Requirement)
             # Heuristic: Only strings or UUID-like strings should typically be unique.
             # Numbers (int, float) are often metrics and should rarely be UNIQUE in this context.
+            # Confidence Check: We need enough data (confidence_threshold) to be sure it's unique.
             is_unique = metrics.get("unique_ratio", 0) >= 1.0
+            field_count = metrics.get("count", 0)
+            
+            if is_unique and field_count < self.confidence_threshold:
+                is_unique = False # Not enough data to be confident yet
+
             if metrics["detected_type"] in ['int', 'float', 'bool']:
                 is_unique = False
             

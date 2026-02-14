@@ -95,7 +95,8 @@ class Analyzer:
                     "type_stability": "stable" if is_stable else "unstable",
                     "detected_type": detected_type,
                     "is_nested": stats["is_nested"],
-                    "unique_ratio": unique_ratio
+                    "unique_ratio": unique_ratio,
+                    "count": stats["count"]
                 }
 
             return summary

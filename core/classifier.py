@@ -29,7 +29,7 @@ class Classifier:
             if field in self.common_fields:
                 schema_decisions[field] = {
                     "target": "BOTH",
-                    "sql_type": self._map_python_type_to_sql(metrics["detected_type"])
+                    "sql_type": self._map_python_type_to_sql(metrics["detected_type"], is_unique=False)
                 }
                 continue
 
@@ -80,7 +80,7 @@ class Classifier:
             if target == "SQL":
                 schema_decisions[field] = {
                     "target": "SQL",
-                    "sql_type": self._map_python_type_to_sql(metrics["detected_type"]),
+                    "sql_type": self._map_python_type_to_sql(metrics["detected_type"], is_unique=is_unique),
                     "is_unique": is_unique
                 }
             else:
@@ -90,15 +90,17 @@ class Classifier:
         self.previous_decisions.update(schema_decisions)
         return schema_decisions
 
-    def _map_python_type_to_sql(self, py_type):
+    def _map_python_type_to_sql(self, py_type, is_unique=False):
         """
         Helper to map Python types to SQL types for CREATE/ALTER TABLE statements.
         """
+        if py_type == 'str':
+            return 'VARCHAR(255)' if is_unique else 'TEXT'
+
         type_map = {
             'int': 'INT',
             'float': 'FLOAT',
             'bool': 'BOOLEAN',
-            'str': 'TEXT',  
             'NoneType': 'VARCHAR(255)',
             'datetime': 'DATETIME'
         }

@@ -3,13 +3,16 @@ Classifier for user events.
 Decision Logic
 """
 class Classifier:
-    def __init__(self, freq_threshold=0.8):
+    def __init__(self, lower_threshold=0.75, upper_threshold=0.85):
         """
         Initializes the Classifier with decision thresholds.
-        :param freq_threshold: Fields appearing in >80% (default) of records are candidates for SQL.
+        :param lower_threshold: Fields dropping below this frequency revert to Mongo.
+        :param upper_threshold: Fields exceeding this frequency promote to SQL.
         """
-        self.freq_threshold = freq_threshold
+        self.lower_threshold = lower_threshold
+        self.upper_threshold = upper_threshold
         self.common_fields = {'username', 'timestamp', 'sys_ingested_at'}
+        self.previous_decisions = {}
 
     def decide_schema(self, stats):
         """
@@ -33,36 +36,54 @@ class Classifier:
             # 2. Heuristic Logic
             
             # CRITERIA A: Is it nested? -> MongoDB
-            # SQL struggles with deep nesting.
             if metrics["is_nested"]:
                 schema_decisions[field] = {"target": "MONGO"}
                 continue
+                
+            # CRITERIA B: Is it purely NoneType? -> MongoDB (Prevent empty SQL columns)
+            if metrics["detected_type"] == 'NoneType':
+                schema_decisions[field] = {"target": "MONGO"}
+                continue
 
-            # CRITERIA B: Is it unstable (Type Drifting)? -> MongoDB
-            # If it switches between int and string, SQL will fail or requires complex casting.
+            # CRITERIA C: Is it unstable (Type Drifting)? -> MongoDB
             if metrics["type_stability"] == "unstable":
                 schema_decisions[field] = {"target": "MONGO"}
                 continue
 
-            # CRITERIA C: Is it rare (Sparse)? -> MongoDB
-            # Creating SQL columns for rare data (NULLs) is inefficient.
-            if metrics["frequency_ratio"] < self.freq_threshold:
-                schema_decisions[field] = {"target": "MONGO"}
-                continue
-
-            # CRITERIA D: High Frequency + Stable + Flat -> SQL
-            # This is the ideal candidate for a structured table.
+            # CRITERIA D: Frequency & Hysteresis
+            freq = metrics["frequency_ratio"]
+            previous_target = self.previous_decisions.get(field, {}).get("target", "MONGO")
             
+            target = "MONGO" # Default
+            
+            # Hysteresis Logic:
+            if previous_target == "SQL" or previous_target == "BOTH":
+                # Only downgrade if it drops drastically (below lower threshold)
+                if freq >= self.lower_threshold:
+                    target = "SQL"
+                else:
+                    target = "MONGO"
+            else:
+                # Upgrade only if it exceeds upper threshold
+                if freq >= self.upper_threshold:
+                    target = "SQL"
+                else:
+                    target = "MONGO"
+
             # Check for Uniqueness (Assignment Requirement)
-            # If unique_ratio is high (~1.0), it's a candidate for a PRIMARY/UNIQUE key.
             is_unique = metrics.get("unique_ratio", 0) >= 1.0
             
-            schema_decisions[field] = {
-                "target": "SQL",
-                "sql_type": self._map_python_type_to_sql(metrics["detected_type"]),
-                "is_unique": is_unique
-            }
-
+            if target == "SQL":
+                schema_decisions[field] = {
+                    "target": "SQL",
+                    "sql_type": self._map_python_type_to_sql(metrics["detected_type"]),
+                    "is_unique": is_unique
+                }
+            else:
+                schema_decisions[field] = {"target": "MONGO"}
+        
+        # Update state
+        self.previous_decisions.update(schema_decisions)
         return schema_decisions
 
     def _map_python_type_to_sql(self, py_type):

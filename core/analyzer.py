@@ -33,7 +33,8 @@ class Analyzer:
                             "types": set(),  
                             "is_nested": False,
                             "unique_values": set(), # Current session unique values
-                            "base_unique_count": 0  # Historical unique count from previous sessions
+                            "base_unique_count": 0, # Historical unique count from previous sessions
+                            "_unique_capped": False # Flag to keep state across exports
                         }
 
                     # 2. Update Frequency Count
@@ -99,55 +100,65 @@ class Analyzer:
         Optimized: Does not save large value sets to JSON to keep file small.
         """
         with self.lock:
-            # Deep copy so we don't mess up the running analyzer
             export_data = {
                 "total_records_processed": self.total_records_processed,
-                "field_stats": copy.deepcopy(self.field_stats)
+                "field_stats": {}
             }
             
-            for key, stats in export_data["field_stats"].items():
-                stats["types"] = list(stats["types"])
+            for key, stats in self.field_stats.items():
+                # Deep copy the field's data for manipulation
+                export_stats = copy.deepcopy(stats)
+                export_stats["types"] = list(export_stats["types"])
                 
-                # Calculate total unique count for storage
-                total_unique = stats.get("base_unique_count", 0) + len(stats["unique_values"])
-                stats["base_unique_count"] = total_unique
+                # Total unique is the historical baseline + current session uniques
+                total_unique = stats["base_unique_count"] + len(stats["unique_values"])
+                export_stats["base_unique_count"] = total_unique
                 
-                # Optimization: Only save values IF it's a small set (like a category/enum)
-                # If it's a large set (like usernames), we only save the count.
+                # Optimization: Only save values IF it's a small set (categories)
                 if len(stats["unique_values"]) > 20:
-                    stats["unique_values"] = [] # Clear the data for the JSON file
-                    # If we already hit our session cap, mark it
+                    export_stats["unique_values"] = []
+                    # If we hit the 1000 cap, mark it in the REAL state too
                     if len(stats["unique_values"]) >= 1000:
                         stats["_unique_capped"] = True
+                        export_stats["_unique_capped"] = True
                 else:
-                    stats["unique_values"] = list(stats["unique_values"])
+                    export_stats["unique_values"] = list(export_stats["unique_values"])
+                
+                export_data["field_stats"][key] = export_stats
                     
             return export_data
 
     def load_stats(self, loaded_data):
         """
         Loads stats from JSON and converts Lists -> Sets.
+        Fixed: Avoids double-counting restored sets.
         """
         if "field_stats" in loaded_data:
             self.total_records_processed = loaded_data.get("total_records_processed", 0)
-            self.field_stats = loaded_data["field_stats"]
+            data_stats = loaded_data["field_stats"]
         else:
-            self.field_stats = loaded_data
+            data_stats = loaded_data
             self.total_records_processed = 0
 
         with self.lock:
-            for key, stats in self.field_stats.items():
+            self.field_stats = {}
+            for key, stats in data_stats.items():
+                self.field_stats[key] = stats
                 stats["types"] = set(stats["types"])
                 
-                # Restore unique_values as a set. 
-                # Note: We don't restore the historical values to the set to keep memory low.
-                # New unique values in this session will be added to this set.
-                if stats.get("_unique_capped", False):
-                     # If it was already capped, keep it capped logic
-                     stats["unique_values"] = set(range(1000)) 
-                else:
-                    stats["unique_values"] = set(stats.get("unique_values", []))
+                # Restore unique_values
+                is_capped = stats.get("_unique_capped", False)
+                restored_set = set(stats.get("unique_values", []))
+                stats["unique_values"] = restored_set
                 
-                # Ensure base_unique_count exists
-                if "base_unique_count" not in stats:
-                    stats["base_unique_count"] = len(stats["unique_values"]) if not stats.get("_unique_capped") else 1000
+                # CRITICAL: base_unique_count in JSON is the TOTAL.
+                # Internal base_unique_count should be Total - len(set)
+                total_from_json = stats.get("base_unique_count", 0)
+                
+                if is_capped:
+                    # If it was already capped, we trick the logic to keep it capped
+                    if len(restored_set) < 1000:
+                        stats["unique_values"] = set(range(1000))
+                    stats["base_unique_count"] = total_from_json - 1000
+                else:
+                    stats["base_unique_count"] = total_from_json - len(restored_set)

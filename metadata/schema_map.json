@@ -1,653 +1,1001 @@
 {
-    "total_records_processed": 26000,
-    "field_stats": {
+    "analyzer": {
+        "total_records_processed": 31000,
+        "field_stats": {
+            "sys_ingested_at": {
+                "count": 31000,
+                "types": [
+                    "datetime"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "username": {
+                "count": 31000,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 7402,
+                "_unique_capped": false
+            },
+            "phone": {
+                "count": 7853,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "ip_address": {
+                "count": 22266,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "device_id": {
+                "count": 20611,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "device_model": {
+                "count": 26524,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "iPhone 14",
+                    "Samsung S23",
+                    "Pixel 8",
+                    "OnePlus 12"
+                ],
+                "base_unique_count": 4,
+                "_unique_capped": false
+            },
+            "altitude": {
+                "count": 19833,
+                "types": [
+                    "float"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "speed": {
+                "count": 16878,
+                "types": [
+                    "float"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "direction": {
+                "count": 7785,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "E",
+                    "S",
+                    "N",
+                    "W"
+                ],
+                "base_unique_count": 4,
+                "_unique_capped": false
+            },
+            "city": {
+                "count": 17894,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "country": {
+                "count": 23998,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1997,
+                "_unique_capped": false
+            },
+            "timestamp": {
+                "count": 24182,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "session_id": {
+                "count": 21080,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "steps": {
+                "count": 11034,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "spo2": {
+                "count": 28386,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    96,
+                    97,
+                    98,
+                    99,
+                    100,
+                    90,
+                    91,
+                    92,
+                    93,
+                    94,
+                    95
+                ],
+                "base_unique_count": 11,
+                "_unique_capped": false
+            },
+            "temperature_c": {
+                "count": 18740,
+                "types": [
+                    "float"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 4136,
+                "_unique_capped": false
+            },
+            "humidity": {
+                "count": 24143,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 793,
+                "_unique_capped": false
+            },
+            "air_quality": {
+                "count": 21898,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "good",
+                    "moderate",
+                    "hazardous",
+                    "bad"
+                ],
+                "base_unique_count": 4,
+                "_unique_capped": false
+            },
+            "purchase_value": {
+                "count": 28640,
+                "types": [
+                    "float"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "item": {
+                "count": 12081,
+                "types": [
+                    "str",
+                    "NoneType"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    null,
+                    "shoes",
+                    "laptop",
+                    "bag",
+                    "book",
+                    "phone"
+                ],
+                "base_unique_count": 6,
+                "_unique_capped": false
+            },
+            "payment_status": {
+                "count": 17439,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "failed",
+                    "pending",
+                    "success"
+                ],
+                "base_unique_count": 3,
+                "_unique_capped": false
+            },
+            "language": {
+                "count": 18967,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1492,
+                "_unique_capped": false
+            },
+            "timezone": {
+                "count": 25605,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 2317,
+                "_unique_capped": false
+            },
+            "ram_usage": {
+                "count": 21074,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 861,
+                "_unique_capped": false
+            },
+            "error_code": {
+                "count": 9623,
+                "types": [
+                    "int",
+                    "NoneType"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    null,
+                    100,
+                    200,
+                    403,
+                    404,
+                    500
+                ],
+                "base_unique_count": 6,
+                "_unique_capped": false
+            },
+            "comment": {
+                "count": 9334,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "avatar_url": {
+                "count": 19078,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "last_seen": {
+                "count": 11508,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "name": {
+                "count": 19178,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "weather": {
+                "count": 25265,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "rainy",
+                    "snow",
+                    "stormy",
+                    "sunny",
+                    "cloudy"
+                ],
+                "base_unique_count": 5,
+                "_unique_capped": false
+            },
+            "action": {
+                "count": 16421,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "purchase",
+                    "login",
+                    "view",
+                    "click",
+                    "logout"
+                ],
+                "base_unique_count": 5,
+                "_unique_capped": false
+            },
+            "subscription": {
+                "count": 24955,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "basic",
+                    "premium",
+                    "trial",
+                    "free"
+                ],
+                "base_unique_count": 4,
+                "_unique_capped": false
+            },
+            "friends_count": {
+                "count": 11843,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "app_version": {
+                "count": 13085,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 3616,
+                "_unique_capped": false
+            },
+            "cpu_usage": {
+                "count": 17319,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 852,
+                "_unique_capped": false
+            },
+            "disk_usage": {
+                "count": 2846,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 713,
+                "_unique_capped": false
+            },
+            "email": {
+                "count": 9556,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "os": {
+                "count": 3851,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "MacOS",
+                    "Linux",
+                    "iOS",
+                    "Android",
+                    "Windows"
+                ],
+                "base_unique_count": 5,
+                "_unique_capped": false
+            },
+            "charging": {
+                "count": 7524,
+                "types": [
+                    "bool"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    false,
+                    true
+                ],
+                "base_unique_count": 2,
+                "_unique_capped": false
+            },
+            "sleep_hours": {
+                "count": 10942,
+                "types": [
+                    "float"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 530,
+                "_unique_capped": false
+            },
+            "signal_strength": {
+                "count": 8163,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                ],
+                "base_unique_count": 5,
+                "_unique_capped": false
+            },
+            "is_active": {
+                "count": 8114,
+                "types": [
+                    "bool"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    false,
+                    true
+                ],
+                "base_unique_count": 2,
+                "_unique_capped": false
+            },
+            "metadata": {
+                "count": 17380,
+                "types": [
+                    "dict"
+                ],
+                "is_nested": true,
+                "unique_values": [],
+                "base_unique_count": 0,
+                "_unique_capped": false
+            },
+            "network": {
+                "count": 16058,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "Ethernet",
+                    "4G",
+                    "Offline",
+                    "5G",
+                    "WiFi"
+                ],
+                "base_unique_count": 5,
+                "_unique_capped": false
+            },
+            "gps_lon": {
+                "count": 6892,
+                "types": [
+                    "float"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1000,
+                "_unique_capped": true
+            },
+            "is_background": {
+                "count": 4202,
+                "types": [
+                    "bool"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    false,
+                    true
+                ],
+                "base_unique_count": 2,
+                "_unique_capped": false
+            },
+            "postal_code": {
+                "count": 1638,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 1637,
+                "_unique_capped": false
+            },
+            "mood": {
+                "count": 4260,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "sad",
+                    "happy",
+                    "excited",
+                    "neutral",
+                    "angry"
+                ],
+                "base_unique_count": 5,
+                "_unique_capped": false
+            },
+            "retry_count": {
+                "count": 3951,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                ],
+                "base_unique_count": 6,
+                "_unique_capped": false
+            },
+            "stress_level": {
+                "count": 4009,
+                "types": [
+                    "str"
+                ],
+                "is_nested": false,
+                "unique_values": [
+                    "high",
+                    "medium",
+                    "low"
+                ],
+                "base_unique_count": 3,
+                "_unique_capped": false
+            },
+            "gps_lat": {
+                "count": 2411,
+                "types": [
+                    "float"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 2411,
+                "_unique_capped": false
+            },
+            "heart_rate": {
+                "count": 5743,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 918,
+                "_unique_capped": false
+            },
+            "age": {
+                "count": 2183,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 400,
+                "_unique_capped": false
+            },
+            "battery": {
+                "count": 2265,
+                "types": [
+                    "int"
+                ],
+                "is_nested": false,
+                "unique_values": [],
+                "base_unique_count": 693,
+                "_unique_capped": false
+            }
+        }
+    },
+    "classifier_decisions": {
         "sys_ingested_at": {
-            "count": 26000,
-            "types": [
-                "datetime"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "BOTH",
+            "sql_type": "DATETIME"
         },
         "username": {
-            "count": 26000,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 6415,
-            "_unique_capped": false
+            "target": "BOTH",
+            "sql_type": "TEXT"
         },
         "phone": {
-            "count": 6598,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "ip_address": {
-            "count": 18681,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "device_id": {
-            "count": 17288,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "device_model": {
-            "count": 22241,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "OnePlus 12",
-                "Samsung S23",
-                "Pixel 8",
-                "iPhone 14"
-            ],
-            "base_unique_count": 4,
-            "_unique_capped": false
+            "target": "SQL",
+            "sql_type": "TEXT",
+            "is_unique": false
         },
         "altitude": {
-            "count": 16624,
-            "types": [
-                "float"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "speed": {
-            "count": 14155,
-            "types": [
-                "float"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "direction": {
-            "count": 6536,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "E",
-                "S",
-                "N",
-                "W"
-            ],
-            "base_unique_count": 4,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "city": {
-            "count": 15009,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "country": {
-            "count": 20130,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1754,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "timestamp": {
-            "count": 20280,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "BOTH",
+            "sql_type": "TEXT"
         },
         "session_id": {
-            "count": 17677,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "steps": {
-            "count": 9247,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "spo2": {
-            "count": 23806,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                96,
-                97,
-                98,
-                99,
-                100,
-                90,
-                91,
-                92,
-                93,
-                94,
-                95
-            ],
-            "base_unique_count": 11,
-            "_unique_capped": false
+            "target": "SQL",
+            "sql_type": "INT",
+            "is_unique": false
         },
         "temperature_c": {
-            "count": 15715,
-            "types": [
-                "float"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 3585,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "humidity": {
-            "count": 20250,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 702,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "air_quality": {
-            "count": 18360,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "bad",
-                "hazardous",
-                "moderate",
-                "good"
-            ],
-            "base_unique_count": 4,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "purchase_value": {
-            "count": 24021,
-            "types": [
-                "float"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "SQL",
+            "sql_type": "FLOAT",
+            "is_unique": false
         },
         "item": {
-            "count": 10134,
-            "types": [
-                "NoneType",
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                null,
-                "laptop",
-                "phone",
-                "bag",
-                "book",
-                "shoes"
-            ],
-            "base_unique_count": 6,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "payment_status": {
-            "count": 14635,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "pending",
-                "failed",
-                "success"
-            ],
-            "base_unique_count": 3,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "language": {
-            "count": 15909,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1310,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "timezone": {
-            "count": 21467,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 2015,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "ram_usage": {
-            "count": 17676,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 761,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "error_code": {
-            "count": 8071,
-            "types": [
-                "NoneType",
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                null,
-                100,
-                200,
-                403,
-                404,
-                500
-            ],
-            "base_unique_count": 6,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "comment": {
-            "count": 7833,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "avatar_url": {
-            "count": 16006,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "last_seen": {
-            "count": 9667,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "name": {
-            "count": 16089,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "weather": {
-            "count": 21182,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "cloudy",
-                "rainy",
-                "sunny",
-                "stormy",
-                "snow"
-            ],
-            "base_unique_count": 5,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "action": {
-            "count": 13776,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "logout",
-                "purchase",
-                "login",
-                "view",
-                "click"
-            ],
-            "base_unique_count": 5,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "subscription": {
-            "count": 20928,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "premium",
-                "trial",
-                "basic",
-                "free"
-            ],
-            "base_unique_count": 4,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "friends_count": {
-            "count": 9932,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "app_version": {
-            "count": 10970,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 3121,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "cpu_usage": {
-            "count": 14522,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 752,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "disk_usage": {
-            "count": 2396,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 615,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "email": {
-            "count": 7999,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "os": {
-            "count": 3235,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "Linux",
-                "MacOS",
-                "Windows",
-                "iOS",
-                "Android"
-            ],
-            "base_unique_count": 5,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "charging": {
-            "count": 6323,
-            "types": [
-                "bool"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                false,
-                true
-            ],
-            "base_unique_count": 2,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "sleep_hours": {
-            "count": 9179,
-            "types": [
-                "float"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 469,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "signal_strength": {
-            "count": 6843,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                1,
-                2,
-                3,
-                4,
-                5
-            ],
-            "base_unique_count": 5,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "is_active": {
-            "count": 6814,
-            "types": [
-                "bool"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                false,
-                true
-            ],
-            "base_unique_count": 2,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "metadata": {
-            "count": 14568,
-            "types": [
-                "dict"
-            ],
-            "is_nested": true,
-            "unique_values": [],
-            "base_unique_count": 0,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "network": {
-            "count": 13457,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "5G",
-                "WiFi",
-                "4G",
-                "Ethernet",
-                "Offline"
-            ],
-            "base_unique_count": 5,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "gps_lon": {
-            "count": 5783,
-            "types": [
-                "float"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1000,
-            "_unique_capped": true
+            "target": "MONGO"
         },
         "is_background": {
-            "count": 3528,
-            "types": [
-                "bool"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                false,
-                true
-            ],
-            "base_unique_count": 2,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "postal_code": {
-            "count": 1374,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 1374,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "mood": {
-            "count": 3568,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "excited",
-                "angry",
-                "neutral",
-                "sad",
-                "happy"
-            ],
-            "base_unique_count": 5,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "retry_count": {
-            "count": 3305,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5
-            ],
-            "base_unique_count": 6,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "stress_level": {
-            "count": 3356,
-            "types": [
-                "str"
-            ],
-            "is_nested": false,
-            "unique_values": [
-                "high",
-                "low",
-                "medium"
-            ],
-            "base_unique_count": 3,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "gps_lat": {
-            "count": 2025,
-            "types": [
-                "float"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 2025,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "heart_rate": {
-            "count": 4819,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 797,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "age": {
-            "count": 1836,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 347,
-            "_unique_capped": false
+            "target": "MONGO"
         },
         "battery": {
-            "count": 1903,
-            "types": [
-                "int"
-            ],
-            "is_nested": false,
-            "unique_values": [],
-            "base_unique_count": 595,
-            "_unique_capped": false
+            "target": "MONGO"
+        }
+    },
+    "router_decisions": {
+        "sys_ingested_at": {
+            "target": "BOTH",
+            "sql_type": "DATETIME"
+        },
+        "username": {
+            "target": "BOTH",
+            "sql_type": "TEXT"
+        },
+        "phone": {
+            "target": "MONGO"
+        },
+        "ip_address": {
+            "target": "MONGO"
+        },
+        "device_id": {
+            "target": "MONGO"
+        },
+        "device_model": {
+            "target": "SQL",
+            "sql_type": "TEXT",
+            "is_unique": false
+        },
+        "altitude": {
+            "target": "MONGO"
+        },
+        "speed": {
+            "target": "MONGO"
+        },
+        "direction": {
+            "target": "MONGO"
+        },
+        "city": {
+            "target": "MONGO"
+        },
+        "country": {
+            "target": "MONGO"
+        },
+        "timestamp": {
+            "target": "BOTH",
+            "sql_type": "TEXT"
+        },
+        "session_id": {
+            "target": "MONGO"
+        },
+        "steps": {
+            "target": "MONGO"
+        },
+        "spo2": {
+            "target": "SQL",
+            "sql_type": "INT",
+            "is_unique": false
+        },
+        "temperature_c": {
+            "target": "MONGO"
+        },
+        "humidity": {
+            "target": "MONGO"
+        },
+        "air_quality": {
+            "target": "MONGO"
+        },
+        "purchase_value": {
+            "target": "SQL",
+            "sql_type": "FLOAT",
+            "is_unique": false
+        },
+        "item": {
+            "target": "MONGO"
+        },
+        "payment_status": {
+            "target": "MONGO"
+        },
+        "language": {
+            "target": "MONGO"
+        },
+        "timezone": {
+            "target": "MONGO"
+        },
+        "ram_usage": {
+            "target": "MONGO"
+        },
+        "error_code": {
+            "target": "MONGO"
+        },
+        "comment": {
+            "target": "MONGO"
+        },
+        "avatar_url": {
+            "target": "MONGO"
+        },
+        "last_seen": {
+            "target": "MONGO"
+        },
+        "name": {
+            "target": "MONGO"
+        },
+        "weather": {
+            "target": "MONGO"
+        },
+        "action": {
+            "target": "MONGO"
+        },
+        "subscription": {
+            "target": "MONGO"
+        },
+        "friends_count": {
+            "target": "MONGO"
+        },
+        "app_version": {
+            "target": "MONGO"
+        },
+        "cpu_usage": {
+            "target": "MONGO"
+        },
+        "disk_usage": {
+            "target": "MONGO"
+        },
+        "email": {
+            "target": "MONGO"
+        },
+        "os": {
+            "target": "MONGO"
+        },
+        "charging": {
+            "target": "MONGO"
+        },
+        "sleep_hours": {
+            "target": "MONGO"
+        },
+        "signal_strength": {
+            "target": "MONGO"
+        },
+        "is_active": {
+            "target": "MONGO"
+        },
+        "metadata": {
+            "target": "MONGO"
+        },
+        "network": {
+            "target": "MONGO"
+        },
+        "gps_lon": {
+            "target": "MONGO"
+        },
+        "is_background": {
+            "target": "MONGO"
+        },
+        "postal_code": {
+            "target": "MONGO"
+        },
+        "mood": {
+            "target": "MONGO"
+        },
+        "retry_count": {
+            "target": "MONGO"
+        },
+        "stress_level": {
+            "target": "MONGO"
+        },
+        "gps_lat": {
+            "target": "MONGO"
+        },
+        "heart_rate": {
+            "target": "MONGO"
+        },
+        "age": {
+            "target": "MONGO"
+        },
+        "battery": {
+            "target": "MONGO"
         }
     }
 }

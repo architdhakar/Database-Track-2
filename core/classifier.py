@@ -104,3 +104,14 @@ class Classifier:
             'datetime': 'DATETIME'
         }
         return type_map.get(py_type, 'TEXT')
+
+    def export_decisions(self):
+        """Export previous decisions for persistence across sessions."""
+        import copy
+        return copy.deepcopy(self.previous_decisions)
+
+    def load_decisions(self, decisions):
+        """Restore previous decisions from persisted metadata."""
+        import copy
+        if decisions:
+            self.previous_decisions = copy.deepcopy(decisions)

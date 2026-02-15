@@ -92,7 +92,8 @@ def process_worker(raw_queue, write_queue, analyzer, classifier):
                 payload = {
                     "batch": buffer,
                     "decisions": schema_decisions,
-                    "stats": analyzer.export_stats()
+                    "stats": analyzer.export_stats(),
+                    "classifier_decisions": classifier.export_decisions()
                 }
                 write_queue.put(payload)
             except Exception as e:
@@ -113,7 +114,13 @@ def router_worker(write_queue, router):
             
             router.sql_handler.update_schema(decisions)
             router.process_batch(batch, decisions)
-            save_metadata(payload['stats'])
+            
+            full_metadata = {
+                "analyzer": payload['stats'],
+                "classifier_decisions": payload.get('classifier_decisions', {}),
+                "router_decisions": router.export_decisions()
+            }
+            save_metadata(full_metadata)
             
             write_queue.task_done()
             
@@ -158,10 +165,18 @@ def main():
         return
 
 
-    saved_stats = load_metadata()
-    if saved_stats:
-        analyzer.load_stats(saved_stats)
-        print(f"      ✓ Loaded metadata ({len(saved_stats.get('field_stats', {}))} fields tracked)")
+    saved_metadata = load_metadata()
+    if saved_metadata:
+        if 'analyzer' in saved_metadata:
+            analyzer.load_stats(saved_metadata['analyzer'])
+            classifier.load_decisions(saved_metadata.get('classifier_decisions', {}))
+            router.load_decisions(saved_metadata.get('router_decisions', {}))
+            field_count = len(saved_metadata['analyzer'].get('field_stats', {}))
+        else:
+            analyzer.load_stats(saved_metadata)
+            field_count = len(saved_metadata.get('field_stats', {}))
+        
+        print(f"      ✓ Loaded metadata ({field_count} fields tracked)")
     else:
         print("      ℹ Starting fresh (no previous metadata)")
 

@@ -100,3 +100,14 @@ class Router:
 
         except Exception as e:
             print(f"[Router] MIGRATION FAILED for '{field}': {e}")
+
+    def export_decisions(self):
+        """Export previous decisions for persistence across sessions."""
+        import copy
+        return copy.deepcopy(self.previous_decisions)
+
+    def load_decisions(self, decisions):
+        """Restore previous decisions from persisted metadata."""
+        import copy
+        if decisions:
+            self.previous_decisions = copy.deepcopy(decisions)

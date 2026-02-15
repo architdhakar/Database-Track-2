@@ -1,7 +1,7 @@
-# Mongo db connection
 import pymongo
 import os 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 class MongoHandler:
@@ -18,22 +18,16 @@ class MongoHandler:
         self.collection = self.db["unstructured_data"]
 
     def insert_batch(self, records):
-        """
-        Inserts a batch of records into MongoDB using bulk write.
-        """
         if not records:
             return
 
-        # Ensure we are not inserting empty records (except for mandatory keys)
         valid_records = []
         for rec in records:
-            # We only insert if there is 'extra' data beyond the basic join keys.
             valid_records.append(rec)
 
         if valid_records:
             try:
                 self.collection.insert_many(valid_records, ordered=False)
-                # print(f"[Mongo Handler] Inserted {len(valid_records)} documents.")
             except pymongo.errors.BulkWriteError as bwe:
                 print(f"[Mongo Handler] Bulk Write Error: {bwe.details}")
             except Exception as e:

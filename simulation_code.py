@@ -10,10 +10,7 @@ random.seed(42)
 app = FastAPI()
 faker = Faker()
 
-# 1. Unique Field Constraint: Persistent Pool of 1,000 users (The Glue)
 USER_POOL = [faker.user_name() for _ in range(1000)]
-
-# Original pool of 50 realistic fields preserved
 FIELD_POOL = {
     "name": lambda: faker.name(),
     "age": lambda: random.randint(18, 70),
@@ -68,14 +65,9 @@ FIELD_POOL = {
     "friends_count": lambda: random.randint(0, 5000)
 }
 
-# --- NEW: BIAS LOGIC (Randomness inside Randomness) ---
-# Each field gets a permanent "Appearance Probability" for this server session.
-# Some will be > 0.8 (Common/SQL candidates), some < 0.2 (Rare/Mongo candidates).
 FIELD_WEIGHTS = {key: random.uniform(0.05, 0.95) for key in FIELD_POOL.keys()}
 
 def get_nested_metadata():
-    """Generates consistent nested keys but randomly omits keys AND values."""
-    # We define the full potential structure
     full_meta = {
         "sensor_data": {
             "version": "2.1",
@@ -87,23 +79,17 @@ def get_nested_metadata():
         "internal_id": faker.bothify(text='ID-####-??')
     }
     
-    # Heuristic: Randomly drop keys within the nested object (50% chance to drop each key)
     sparse_meta = {k: v for k, v in full_meta.items() if random.random() > 0.5}
-    
-    # If it's empty, we return None so the field doesn't even appear
     return sparse_meta if sparse_meta else None
 
 def generate_record():
-    # Start with the mandatory Username (100% frequency)
     record = {"username": random.choice(USER_POOL)}
     
-    # 1. Flat fields: instead of fixed count, we use the pre-defined WEIGHTS
     for key, weight in FIELD_WEIGHTS.items():
         if random.random() < weight:
             record[key] = FIELD_POOL[key]()
 
-    # 2. Nesting: Consistent structure name, but internal data is sparse
-    if random.random() > 0.4: # 60% chance to include the metadata block
+    if random.random() > 0.4:
         meta_content = get_nested_metadata()
         if meta_content:
             record["metadata"] = meta_content
@@ -118,6 +104,6 @@ async def single_record():
 async def stream_records(count: int):
     async def event_generator():
         for _ in range(count):
-            await asyncio.sleep(0.01) # Reduced sleep for high-volume 100k tests
+            await asyncio.sleep(0.01)
             yield {"event": "record", "data": json.dumps(generate_record())}
     return EventSourceResponse(event_generator())

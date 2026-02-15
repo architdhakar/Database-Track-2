@@ -1,15 +1,7 @@
-"""
-Classifier for user events.
-Decision Logic
-"""
+"""Field classification logic for routing data to SQL or MongoDB."""
+
 class Classifier:
     def __init__(self, lower_threshold=0.75, upper_threshold=0.85, confidence_threshold=1000):
-        """
-        Initializes the Classifier with decision thresholds.
-        :param lower_threshold: Fields dropping below this frequency revert to Mongo.
-        :param upper_threshold: Fields exceeding this frequency promote to SQL.
-        :param confidence_threshold: Min records required before committing to UNIQUE constraint.
-        """
         self.lower_threshold = lower_threshold
         self.upper_threshold = upper_threshold
         self.confidence_threshold = confidence_threshold
@@ -17,17 +9,10 @@ class Classifier:
         self.previous_decisions = {}
 
     def decide_schema(self, stats):
-        """
-        Decides the target backend (SQL vs MongoDB) for each field.
-        
-        Returns:
-            dict: {'field_name': {'target': 'SQL', 'type': 'VARCHAR'}, ...}
-        """
         schema_decisions = {}
 
         for field, metrics in stats.items():
             
-            # 1. Handle Mandatory Fields (Always BOTH)
             if field in self.common_fields:
                 schema_decisions[field] = {
                     "target": "BOTH",
@@ -35,55 +20,34 @@ class Classifier:
                 }
                 continue
 
-            # 2. Heuristic Logic
-            
-            # CRITERIA A: Is it nested? -> MongoDB
             if metrics["is_nested"]:
                 schema_decisions[field] = {"target": "MONGO"}
                 continue
                 
-            # CRITERIA B: Is it purely NoneType? -> MongoDB (Prevent empty SQL columns)
             if metrics["detected_type"] == 'NoneType':
                 schema_decisions[field] = {"target": "MONGO"}
                 continue
 
-            # CRITERIA C: Is it unstable (Type Drifting)? -> MongoDB
             if metrics["type_stability"] == "unstable":
                 schema_decisions[field] = {"target": "MONGO"}
                 continue
 
-            # CRITERIA D: Frequency & Hysteresis
             freq = metrics["frequency_ratio"]
             previous_target = self.previous_decisions.get(field, {}).get("target", "MONGO")
+            target = "MONGO"
             
-            target = "MONGO" # Default
-            
-            # Hysteresis Logic:
             if previous_target == "SQL" or previous_target == "BOTH":
-                # Only downgrade if it drops drastically (below lower threshold)
                 if freq >= self.lower_threshold:
                     target = "SQL"
                 else:
                     target = "MONGO"
             else:
-                # Upgrade only if it exceeds upper threshold
                 if freq >= self.upper_threshold:
                     target = "SQL"
                 else:
                     target = "MONGO"
 
-            # Check for Uniqueness (Assignment Requirement)
-            # Heuristic: Only strings or UUID-like strings should typically be unique.
-            # Numbers (int, float) are often metrics and should rarely be UNIQUE in this context.
-            # Confidence Check: We need enough data (confidence_threshold) to be sure it's unique.
-            is_unique = metrics.get("unique_ratio", 0) >= 1.0
-            field_count = metrics.get("count", 0)
-            
-            if is_unique and field_count < self.confidence_threshold:
-                is_unique = False # Not enough data to be confident yet
-
-            if metrics["detected_type"] in ['int', 'float', 'bool']:
-                is_unique = False
+            is_unique = self._is_identifier_field(field, metrics)
             
             if target == "SQL":
                 schema_decisions[field] = {
@@ -94,9 +58,36 @@ class Classifier:
             else:
                 schema_decisions[field] = {"target": "MONGO"}
         
-        # Update state
         self.previous_decisions.update(schema_decisions)
         return schema_decisions
+
+    def _is_identifier_field(self, field, metrics):
+        """Identifies true unique identifier fields vs high-cardinality measurement fields."""
+        
+        if metrics["detected_type"] in ['int', 'float', 'bool', 'NoneType']:
+            return False
+        
+        if metrics["detected_type"] != 'str' or metrics["type_stability"] != "stable":
+            return False
+        
+        field_count = metrics.get("count", 0)
+        if field_count < self.confidence_threshold:
+            return False
+        
+        unique_ratio = metrics.get("unique_ratio", 0)
+        if unique_ratio < 0.98:
+            return False
+        
+        field_lower = field.lower()
+        identifier_patterns = ['_id', 'uuid', 'email', 'username', 'user_name']
+        
+        has_identifier_pattern = any(pattern in field_lower for pattern in identifier_patterns)
+        
+        # CONSERVATIVE DECISION:
+        # Only mark as UNIQUE if it has identifier naming pattern
+        # This prevents false positives on high-cardinality measurement fields
+        # (e.g., purchase_value, ip_address, phone_number)
+        return has_identifier_pattern
 
     def _map_python_type_to_sql(self, py_type, is_unique=False):
         """
@@ -112,22 +103,4 @@ class Classifier:
             'NoneType': 'VARCHAR(255)',
             'datetime': 'DATETIME'
         }
-        # If unknown, default to TEXT to be safe
         return type_map.get(py_type, 'TEXT')
-
-# --- Testing Block ---
-if __name__ == "__main__":
-    # Simulate stats coming from Analyzer
-    test_stats = {
-        "user_name": {"frequency_ratio": 1.0, "type_stability": "stable", "detected_type": "str", "is_nested": False},
-        "age":       {"frequency_ratio": 0.95, "type_stability": "stable", "detected_type": "int", "is_nested": False},
-        "bio":       {"frequency_ratio": 0.10, "type_stability": "stable", "detected_type": "str", "is_nested": False}, # Rare -> Mongo
-        "config":    {"frequency_ratio": 1.0, "type_stability": "stable", "detected_type": "dict", "is_nested": True},   # Nested -> Mongo
-        "score":     {"frequency_ratio": 0.9, "type_stability": "unstable", "detected_type": "mixed", "is_nested": False} # Drifting -> Mongo
-    }
-
-    classifier = Classifier()
-    decisions = classifier.decide_schema(test_stats)
-    
-    import json
-    print(json.dumps(decisions, indent=2))

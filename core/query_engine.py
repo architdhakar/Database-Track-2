@@ -2,19 +2,11 @@ import time
 
 class QueryEngine:
     def __init__(self, analyzer, ingestion_queue):
-        """
-        initializes the Query Engine.
-        :param analyzer: Instance of Core.Analyzer to access field stats.
-        :param ingestion_queue: Instance of queue.Queue to check buffer size.
-        """
         self.analyzer = analyzer
         self.queue = ingestion_queue
         self.start_time = time.time()
 
     def process_command(self, command_str):
-        """
-        Parses and executes a CLI command.
-        """
         args = command_str.strip().split()
         if not args:
             return ""

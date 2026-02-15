@@ -15,12 +15,25 @@ class QueryEngine:
 
         if cmd == "help":
             return (
-                "Available Commands:\n"
-                "  status          - Show system uptime and total processed records.\n"
-                "  queue           - Show current number of records waiting in queue.\n"
-                "  stats <field>   - Show statistics for a specific field.\n"
-                "  all_stats       - Show stats for all fields (summary).\n"
-                "  exit            - Stop the system.\n"
+                "\n" + "="*60 + "\n"
+                "  AVAILABLE COMMANDS\n"
+                + "="*60 + "\n\n"
+                "  status\n"
+                "    Shows system uptime, total records processed, and active field count.\n\n"
+                "  stats <field>\n"
+                "    Displays detailed analytics for a specific field including:\n"
+                "    - Frequency ratio (how often it appears)\n"
+                "    - Type stability (stable or mixed types)\n"
+                "    - Detected type (str, int, float, etc.)\n"
+                "    - Uniqueness ratio\n"
+                "    Example: stats age\n\n"
+                "  queue\n"
+                "    Shows number of records currently waiting in ingestion buffer.\n\n"
+                "  all_stats\n"
+                "    Displays summary statistics for all tracked fields.\n\n"
+                "  exit\n"
+                "    Gracefully shuts down all worker threads and closes connections.\n"
+                + "="*60 + "\n"
             )
 
         elif cmd == "status":
@@ -37,17 +50,42 @@ class QueryEngine:
 
         elif cmd == "stats":
             if len(args) < 2:
-                return "Usage: stats <field_name>"
+                return "Usage: stats <field_name>\nExample: stats age"
             field = args[1]
             stats = self.analyzer.get_schema_stats()
             if field in stats:
-                return f"Stats for '{field}': {stats[field]}"
+                s = stats[field]
+                return (
+                    f"\n{'='*60}\n"
+                    f"  FIELD ANALYSIS: '{field}'\n"
+                    f"{'='*60}\n"
+                    f"  Frequency Ratio:  {s['frequency_ratio']:.2%} (appears in {s['frequency_ratio']*100:.1f}% of records)\n"
+                    f"  Type Stability:   {s['type_stability']}\n"
+                    f"  Detected Type:    {s['detected_type']}\n"
+                    f"  Is Nested:        {s['is_nested']}\n"
+                    f"  Unique Ratio:     {s['unique_ratio']:.2%}\n"
+                    f"  Total Count:      {s['count']} occurrences\n"
+                    f"{'='*60}\n"
+                )
             else:
-                return f"Field '{field}' not found. Note: Fields are case-sensitive."
+                return f"Field '{field}' not found. Type 'all_stats' to see available fields."
 
         elif cmd == "all_stats":
-             stats = self.analyzer.get_schema_stats()
-             return str(stats)
+            stats = self.analyzer.get_schema_stats()
+            if not stats:
+                return "No field statistics available yet. Wait for data to be ingested."
+            
+            result = f"\n{'='*80}\n  ALL FIELD STATISTICS ({len(stats)} fields tracked)\n{'='*80}\n"
+            for field_name in sorted(stats.keys()):
+                s = stats[field_name]
+                result += (
+                    f"\n[{field_name}]\n"
+                    f"  Frequency: {s['frequency_ratio']:.2%}  |  Type: {s['detected_type']}  |  "
+                    f"Stability: {s['type_stability']}  |  Unique: {s['unique_ratio']:.2%}  |  "
+                    f"Count: {s['count']}\n"
+                )
+            result += f"{'='*80}\n"
+            return result
 
         else:
             return f"Unknown command: '{cmd}'. Type 'help' for options."

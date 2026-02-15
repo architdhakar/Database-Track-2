@@ -57,27 +57,80 @@ See [architecture.txt](architecture.txt) for a diagram and [system_concepts.md](
     STREAM_URL=http://127.0.0.1:8000/record
     ```
 
-## 🚀 Usage
+## 🚀 Quick Start
 
-### 1. Start the Data Simulation Server
-In a separate terminal, run the mock data generator:
+**Prerequisites:** MySQL and MongoDB must be running locally.
+
+### Step 1: Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Step 2: Configure Environment
+Create a `.env` file (or edit the existing one):
+```env
+MONGO_URI=mongodb://localhost:27017/
+MONGO_DB_NAME=adaptive_db
+SQL_HOST=localhost
+SQL_PORT=3306
+SQL_USER=root
+SQL_PASSWORD=your_password
+SQL_DB_NAME=adaptive_db
+```
+
+### Step 3: Start Simulation Server
+Open a **separate terminal** and run:
 ```bash
 uvicorn simulation_code:app --reload --port 8000
 ```
+Leave this running. You should see: `Uvicorn running on http://127.0.0.1:8000`
 
-### 2. Run the Adaptive Engine
+### Step 4: Run the Adaptive Engine
+In the **original terminal**, run:
 ```bash
-python main.py
+python3 main.py
 ```
-*   The system will connect to the stream and databases.
-*   You will see logs indicating "Schema Evolution" or "Migration Alert".
 
-### 3. Interactive CLI
-While the engine is running, you can type commands:
-*   `status`: Shows current queue sizes and thread health.
-*   `stats <field_name>`: Shows analysis metrics (e.g., `stats age`).
-*   `queue`: Shows raw queue size.
-*   `exit`: Gracefully shuts down the system.
+The system will:
+- ✓ Check if the simulation server is running
+- ✓ Connect to MySQL and MongoDB
+- ✓ Load previous metadata (if any)
+- ✓ Start processing data streams
+
+### Step 5: Interact with the System
+Once you see `SYSTEM READY`, you can type commands in the prompt:
+
+#### Available Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `status` | Shows system uptime, total records processed, and active field count | `>> status` |
+| `stats <field>` | Displays detailed analytics for a specific field including frequency ratio, type stability, uniqueness, and detected type | `>> stats age` |
+| `queue` | Shows the number of records currently waiting in the ingestion buffer | `>> queue` |
+| `help` | Lists all available commands with brief descriptions | `>> help` |
+| `exit` | Gracefully shuts down all worker threads and closes database connections | `>> exit` |
+
+**Example Session:**
+```bash
+>> status
+System Uptime: 45 seconds
+Total Records Processed: 2150
+Active Fields Tracked: 38
+
+>> stats device_model
+Stats for 'device_model': {'frequency_ratio': 0.92, 'type_stability': 'stable', 
+'detected_type': 'str', 'is_nested': False, 'unique_ratio': 0.004, 'count': 1978}
+
+>> queue
+Current Queue Size: 12 records pending processing.
+
+>> exit
+Initiating shutdown...
+```
+
+**Note:** The system automatically adapts as data arrives. Watch for messages like:
+- `[SQL Handler] Evolving Schema: Adding column 'field_name'`
+- `[Router] MIGRATION: Field drifted from SQL to MongoDB`
 
 ## 🧠 Logic & Heuristics
 *   **Nested Data** $\rightarrow$ MongoDB (Always)

@@ -125,9 +125,20 @@ def router_worker(write_queue, router):
     print("[Router] Thread stopping.")
 
 def main():
-    print("Starting Adaptive Ingestion Engine...")
+    print("="*60)
+    print("  ADAPTIVE INGESTION ENGINE")
+    print("="*60)
+    
+    print("\n[1/4] Checking data stream availability...")
+    try:
+        response = requests.get(DATA_STREAM_URL.replace('/record/5000', '/'), timeout=2)
+        print("      ✓ Data stream server is running")
+    except requests.exceptions.RequestException:
+        print("\n⚠️  WARNING: Simulation server not detected!")
+        print("    Start it first: uvicorn simulation_code:app --reload --port 8000\n")
+        return
 
-
+    print("\n[2/4] Initializing components...")
     raw_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
     write_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
     
@@ -138,19 +149,23 @@ def main():
     mongo_handler = MongoHandler()
     router = Router(sql_handler, mongo_handler)
     
-    print("Connecting to storage backends...")
+    print("\n[3/4] Connecting to databases...")
     try:
         sql_handler.connect()
+        print("      ✓ MySQL connected")
     except Exception as e:
-        print(f"Warning: SQL Connection failed: {e}")
+        print(f"      ✗ MySQL connection failed: {e}")
+        return
 
 
     saved_stats = load_metadata()
     if saved_stats:
         analyzer.load_stats(saved_stats)
-        print("Loaded existing metadata.")
+        print(f"      ✓ Loaded metadata ({len(saved_stats.get('field_stats', {}))} fields tracked)")
+    else:
+        print("      ℹ Starting fresh (no previous metadata)")
 
-
+    print("\n[4/4] Starting worker threads...")
     t_ingest = threading.Thread(target=ingest_worker, args=(raw_queue, DATA_STREAM_URL))
     t_process = threading.Thread(target=process_worker, args=(raw_queue, write_queue, analyzer, classifier))
     t_router = threading.Thread(target=router_worker, args=(write_queue, router))
@@ -161,7 +176,16 @@ def main():
 
     query_engine = QueryEngine(analyzer, raw_queue)
 
-    print("\nSystem Running. Type 'help' for commands, or 'exit' to quit.\n")
+    print("\n" + "="*60)
+    print("  SYSTEM READY")
+    print("="*60)
+    print("\nAvailable Commands:")
+    print("  • status           - Show system uptime and processing statistics")
+    print("  • stats <field>    - Display detailed analysis for a specific field")
+    print("  • all_stats        - View statistics for all tracked fields")
+    print("  • queue            - Check current queue sizes")
+    print("  • help             - Show detailed command help")
+    print("  • exit             - Shut down the system gracefully\n")
     
     try:
         while True:
@@ -175,17 +199,17 @@ def main():
             print(response)
             
     except KeyboardInterrupt:
-        print("\nShutdown signal received.")
+        print("\n\n⚠️  Interrupt received.")
         STOP_EVENT.set()
     finally:
-        print("Waiting for worker threads to finish...")
+        print("Stopping worker threads...")
         t_ingest.join()
         t_process.join()
         t_router.join()
         
         sql_handler.close()
         mongo_handler.close()
-        print("Database connections closed. System Shutdown Complete.")
+        print("✓ Shutdown complete.\n")
 
 if __name__ == "__main__":
     main()

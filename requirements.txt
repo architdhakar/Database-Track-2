@@ -6,3 +6,4 @@ requests
 sseclient-py 
 mysql-connector-python 
 pymongo
+groq

@@ -83,9 +83,13 @@ def get_nested_metadata():
     return sparse_meta if sparse_meta else None
 
 def generate_record():
-    record = {"username": random.choice(USER_POOL)}
+    record = {"username": random.choice(USER_POOL)
+              , "timestamp": datetime.utcnow().isoformat()}
+
     
     for key, weight in FIELD_WEIGHTS.items():
+        if key in ["username", "timestamp"]:
+            continue
         if random.random() < weight:
             record[key] = FIELD_POOL[key]()
 

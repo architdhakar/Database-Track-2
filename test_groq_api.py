@@ -2,7 +2,10 @@
 Test script to verify Groq API syntax
 Testing the official Groq Python library
 """
-
+# filepath: /Users/architdhakar/Documents/Coding/Database-Track-2/test_groq_api.py
+from dotenv import load_dotenv
+load_dotenv()
+# ...existing code...
 print("Testing Groq API Syntax...\n")
 
 print("=" * 60)

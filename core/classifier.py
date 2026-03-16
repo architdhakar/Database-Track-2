@@ -1,5 +1,6 @@
 """Field classification logic for routing data to SQL or MongoDB."""
-
+from dotenv import load_dotenv
+load_dotenv()
 class Classifier:
     def __init__(self, lower_threshold=0.75, upper_threshold=0.85, confidence_threshold=1000):
         self.lower_threshold = lower_threshold

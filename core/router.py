@@ -7,10 +7,16 @@ class Router:
         self.sql_handler = sql_handler
         self.mongo_handler = mongo_handler
         self.previous_decisions = {}
+        self.field_db_assignments = {}  # Track confirmed DB assignments for fields
 
     def process_batch(self, batch, schema_decisions):
         self._check_and_migrate(schema_decisions)
         self.previous_decisions.update(schema_decisions)
+        
+        # Update field_db_assignments with current decisions
+        for field, decision in schema_decisions.items():
+            self.field_db_assignments[field] = decision.get('db', decision.get('target', 'MONGO'))
+        
         sql_inserts = []
         mongo_inserts = []
 
@@ -104,10 +110,19 @@ class Router:
     def export_decisions(self):
         """Export previous decisions for persistence across sessions."""
         import copy
-        return copy.deepcopy(self.previous_decisions)
+        decisions_with_db = {}
+        for field, decision in self.previous_decisions.items():
+            decisions_with_db[field] = copy.deepcopy(decision)
+            # Ensure db field is set
+            if 'db' not in decisions_with_db[field]:
+                decisions_with_db[field]['db'] = self.field_db_assignments.get(field, decision.get('target', 'MONGO'))
+        return decisions_with_db
 
     def load_decisions(self, decisions):
         """Restore previous decisions from persisted metadata."""
         import copy
         if decisions:
             self.previous_decisions = copy.deepcopy(decisions)
+            # Extract and cache field_db_assignments
+            for field, decision in decisions.items():
+                self.field_db_assignments[field] = decision.get('db', decision.get('target', 'MONGO'))

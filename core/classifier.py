@@ -1,6 +1,5 @@
 """Field classification logic for routing data to SQL or MongoDB."""
-from dotenv import load_dotenv
-load_dotenv()
+
 class Classifier:
     def __init__(self, lower_threshold=0.75, upper_threshold=0.85, confidence_threshold=1000):
         self.lower_threshold = lower_threshold
@@ -18,20 +17,21 @@ class Classifier:
             if field in self.common_fields:
                 schema_decisions[field] = {
                     "target": "BOTH",
-                    "sql_type": self._map_python_type_to_sql(metrics["detected_type"], is_unique=False)
+                    "sql_type": self._map_python_type_to_sql(metrics["detected_type"], is_unique=False),
+                    "db": "BOTH"
                 }
                 continue
 
             if metrics["is_nested"]:
-                schema_decisions[field] = {"target": "MONGO"}
+                schema_decisions[field] = {"target": "MONGO", "db": "MONGO"}
                 continue
                 
             if metrics["detected_type"] == 'NoneType':
-                schema_decisions[field] = {"target": "MONGO"}
+                schema_decisions[field] = {"target": "MONGO", "db": "MONGO"}
                 continue
 
             if metrics["type_stability"] == "unstable":
-                schema_decisions[field] = {"target": "MONGO"}
+                schema_decisions[field] = {"target": "MONGO", "db": "MONGO"}
                 continue
 
             freq = metrics["frequency_ratio"]
@@ -55,10 +55,11 @@ class Classifier:
                 schema_decisions[field] = {
                     "target": "SQL",
                     "sql_type": self._map_python_type_to_sql(metrics["detected_type"], is_unique=is_unique),
-                    "is_unique": is_unique
+                    "is_unique": is_unique,
+                    "db": "SQL"
                 }
             else:
-                schema_decisions[field] = {"target": "MONGO"}
+                schema_decisions[field] = {"target": "MONGO", "db": "MONGO"}
         
         self.previous_decisions.update(schema_decisions)
         return schema_decisions

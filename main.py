@@ -103,7 +103,7 @@ def process_worker(raw_queue, write_queue, analyzer, classifier):
     
     print("[Processor] Thread stopping.")
 
-def router_worker(write_queue, router):
+def router_worker(write_queue, router, analyzer):
     print("[Router] Worker started.")
     
     while not STOP_EVENT.is_set() or not write_queue.empty():
@@ -115,8 +115,11 @@ def router_worker(write_queue, router):
             router.sql_handler.update_schema(decisions)
             router.process_batch(batch, decisions)
             
+            # Update analyzer's field_stats with db assignments from router
+            analyzer.update_db_assignment(decisions)
+            
             full_metadata = {
-                "analyzer": payload['stats'],
+                "analyzer": analyzer.export_stats(),
                 "classifier_decisions": payload.get('classifier_decisions', {}),
                 "router_decisions": router.export_decisions()
             }
@@ -183,7 +186,7 @@ def main():
     print("\n[4/4] Starting worker threads...")
     t_ingest = threading.Thread(target=ingest_worker, args=(raw_queue, DATA_STREAM_URL))
     t_process = threading.Thread(target=process_worker, args=(raw_queue, write_queue, analyzer, classifier))
-    t_router = threading.Thread(target=router_worker, args=(write_queue, router))
+    t_router = threading.Thread(target=router_worker, args=(write_queue, router, analyzer))
 
     t_ingest.start()
     t_process.start()

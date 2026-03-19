@@ -25,7 +25,8 @@ class Analyzer:
                             "is_nested": False,
                             "unique_values": set(),
                             "base_unique_count": 0,
-                            "_unique_capped": False
+                            "_unique_capped": False,
+                            "db": None
                         }
 
                     self.field_stats[key]["count"] += 1
@@ -97,6 +98,7 @@ class Analyzer:
                         for v in stats["unique_values"]
                     ]
                 
+                export_stats["db"] = stats.get("db", None)
                 export_data["field_stats"][key] = export_stats
                     
             return export_data
@@ -128,3 +130,12 @@ class Analyzer:
                     stats["base_unique_count"] = total_from_json - 1000
                 else:
                     stats["base_unique_count"] = total_from_json - len(restored_set)
+
+    def update_db_assignment(self, schema_decisions):
+        """Update field_stats with db assignment from routing decisions."""
+        with self.lock:
+            for field, decision in schema_decisions.items():
+                if field in self.field_stats:
+                    # Get db from decision, fallback to target
+                    db_assignment = decision.get('db', decision.get('target', 'MONGO'))
+                    self.field_stats[field]["db"] = db_assignment

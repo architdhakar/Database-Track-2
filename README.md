@@ -7,6 +7,8 @@ Assingment-2 Video Link: https://youtu.be/1UnupiQ_ETQ
 
 Assignment 3 Video : https://youtu.be/gndVYcT1Rb4
 
+Assignment 4 Video : https://youtu.be/4Kxyc1yOGqI
+
 ##  Overview
 This project implements an **autonomous data ingestion engine** that dynamically routes incoming JSON records to the optimal storage backend (**MySQL** or **MongoDB**) based on data characteristics.
 

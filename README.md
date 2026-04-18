@@ -359,3 +359,20 @@ python3 setup_dashboard.py
 ```
 
 This programme will guide to open the interactive dashboard. All ACID tests can be run from the dashboard along with CRUD queries.
+
+### Launch the Dashboard
+Once the setup is complete, you can launch the dashboard using the following command:
+```bash
+uvicorn web.dashboard:app --reload --port 8001
+```
+You can then access the dashboard in your browser at `http://localhost:8001`.
+
+## How to Run the Benchmark
+
+A benchmark script is included to evaluate the performance of the data ingestion, query execution, and transaction coordination.
+
+To run the benchmark, execute the following command:
+```bash
+python3 benchmark.py
+```
+The script will run a series of tests and print a performance report to the console.
